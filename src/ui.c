@@ -170,7 +170,7 @@ static void setup_main_window(Config *config, UI *ui)
     gtk_container_set_border_width(GTK_CONTAINER(main_window), config->layout_spacing);
     gtk_widget_set_name(GTK_WIDGET(main_window), "main");
 
-    g_signal_connect(main_window, "show", G_CALLBACK(place_main_window), NULL);
+    g_signal_connect(main_window, "show", G_CALLBACK(place_main_window), config);
     g_signal_connect(main_window, "realize", G_CALLBACK(hide_mouse_cursor), NULL);
     g_signal_connect(main_window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
@@ -191,15 +191,25 @@ static void place_main_window(GtkWidget *main_window, gpointer user_data)
     GdkMonitor *primary_monitor = gdk_display_get_primary_monitor(display);
     GdkRectangle primary_monitor_geometry;
     gdk_monitor_get_geometry(primary_monitor, &primary_monitor_geometry);
+    Config *config = (Config*) user_data;
 
     // Get the Geometry of the Window
     gint window_width, window_height;
     gtk_window_get_size(GTK_WINDOW(main_window), &window_width, &window_height);
 
+    gint x_offset = primary_monitor_geometry.x + 
+	    (gint) (primary_monitor_geometry.width * config->position_x) -
+	    window_width / 2;
+    gint y_offset = primary_monitor_geometry.y + 
+	    (gint) (primary_monitor_geometry.height * config->position_y) -
+	    window_height / 2;
     gtk_window_move(
         GTK_WINDOW(main_window),
-        primary_monitor_geometry.x + primary_monitor_geometry.width / 2 - window_width / 2,
-        primary_monitor_geometry.y + primary_monitor_geometry.height / 2 - window_height / 2);
+	x_offset,
+	y_offset
+    );
+        //primary_monitor_geometry.x + primary_monitor_geometry.width / 2 - window_width / 2,
+        //primary_monitor_geometry.y + primary_monitor_geometry.height / 2 - window_height / 2);
 }
 
 

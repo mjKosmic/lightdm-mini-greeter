@@ -20,6 +20,7 @@ static guint parse_greeter_hotkey_keyval(GKeyFile *keyfile, const char *key_name
 static gunichar *parse_greeter_password_char(GKeyFile *keyfile);
 static gfloat parse_greeter_password_alignment(GKeyFile *keyfile);
 static gboolean is_rtl_keymap_layout(void);
+static gdouble get_relative_position(GKeyFile *keyfile, const char *axis);
 gboolean input_string_equals(gchar *input_str, const gchar * const fixed_str);
 
 /* Initialize the configuration, sourcing the greeter's configuration file */
@@ -164,6 +165,8 @@ Config *initialize_config(void)
         config->layout_spacing = (guint) layout_spacing;
     }
 
+    config->position_x = get_relative_position(keyfile, "x");
+    config->position_y = get_relative_position(keyfile, "y");
 
     g_key_file_free(keyfile);
 
@@ -319,6 +322,26 @@ static guint parse_greeter_hotkey_keyval(GKeyFile *keyfile, const char *key_name
     }
 
     return gdk_unicode_to_keyval(key_code);
+}
+
+/*
+ * Get relative window position double value, return 0.5 if missing or unable to parse
+ */
+static gdouble get_relative_position(GKeyFile *keyfile, const char *axis) {
+    g_autoptr(GError) error = NULL;
+    char key[80];
+    gdouble pos = g_key_file_get_double(
+			keyfile,
+			"greeter-theme",
+			strcat(strcpy(key, "window-position-"), axis),
+			&error
+		    );
+    if (error != NULL || pos < 0.0 || pos > 1.0) {
+    	g_message("Error while parsing window-position-%s", axis);
+	pos = 0.5;
+    }
+
+    return pos;
 }
 
 /* Parse the password masking character that should be displayed when typing
